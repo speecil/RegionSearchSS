@@ -62,10 +62,11 @@ namespace SearchOCE.HarmonyPatches
         {
             HttpClient client = new HttpClient();
             JArray scoreContent = new JArray();
-            List<string> responseData = new List<string>(); 
+            List<string> responseData = new List<string>();
 
-            if (page % 5 != 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0]+(page-1)+url[2])));
-            responseData.Add(await client.GetStringAsync(string.Join("", url)));
+            int pageNum = page == 1 ? 1 : (int)(page*10 / 12f);
+            if (page*10 % 12 != 10 || page == 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2])));
+            if (page*10 % 12 != 0 && page != 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2])));
 
             foreach (string response in responseData)
             {
