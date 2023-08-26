@@ -11,7 +11,7 @@ namespace RegionSearchSS.UI
             DaConfig config = DaConfig.Instance;
 
             [UIValue("regionOptions")]
-            private List<object> options = new object[] { "None", "Americas", "Oceania", "Asia", "Europe", "Africa" }.ToList();
+            private List<object> options = new object[] { "Default", "Americas", "Oceania", "Asia", "Europe", "Africa" }.ToList();
 
             [UIValue("modEnabled")]
             private bool modEnabled

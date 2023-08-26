@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace RegionSearchSS.HarmonyPatches
         [HarmonyPrefix]
         public static bool Prefix(object __instance, IDifficultyBeatmap difficultyBeatmap, int page, PlayerSpecificSettings playerSpecificSettings, bool filterAroundCountry, ref object __result)
         {
-            if (!filterAroundCountry || !DaConfig.Instance.Enabled || DaConfig.Instance.SelectedRegion.ToLower() == "none") return true;
+            if (!filterAroundCountry || !DaConfig.Instance.Enabled || DaConfig.Instance.SelectedRegion.ToLower() == "default") return true;
             TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
             __result = taskCompletionSource.Task;
             GetLeaderboardData(__instance, difficultyBeatmap, page, playerSpecificSettings, taskCompletionSource);
@@ -54,7 +55,14 @@ namespace RegionSearchSS.HarmonyPatches
             string normalUrl = $"/game/leaderboard/around-country/{leaderboardId}/mode/{gameMode}/difficulty/{difficulty}?page={page}";
 
             object http = typeof(ScoreSaber.Plugin).GetProperty("HttpInstance", Flags[0] | Flags[3])?.GetValue(null);
-            string normalData = await (Task<string>)http.GetType().GetMethod("GetAsync", Flags[0] | Flags[2]).Invoke(http, new object[] { normalUrl });
+            string normalData = "{\"errorMessage\": \"No scores found\"}";
+            try
+            {
+                normalData = await (Task<string>)http.GetType().GetMethod("GetAsync", Flags[0] | Flags[2]).Invoke(http, new object[] { normalUrl });
+            }
+            catch
+            {
+            }
 
             Type leaderboardType = typeof(ScoreSaber.Plugin).Assembly.GetType("ScoreSaber.Core.Data.Models.Leaderboard");
             object leaderboardData = JsonConvert.DeserializeObject(normalData, leaderboardType);
@@ -78,8 +86,26 @@ namespace RegionSearchSS.HarmonyPatches
             List<string> responseData = new List<string>();
 
             int pageNum = page == 1 ? 1 : (int)(page * 10 / 12f);
-            if (page * 10 % 12 != 10 || page == 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2])));
-            if (page * 10 % 12 != 0 && page != 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2])));
+
+            try
+            {
+                if (page * 10 % 12 != 10 || page == 1)
+                {
+                    string response = await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2]));
+                    responseData.Add(response);
+                }
+                if (page * 10 % 12 != 0 && page != 1)
+                {
+                    string response = await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2]));
+                    responseData.Add(response);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Type scoreType2 = typeof(ScoreSaber.Plugin).Assembly.GetType("ScoreSaber.Core.Data.Models.Score");
+                object scoreData2 = JsonConvert.DeserializeObject(scoreContent.ToString(), scoreType2.MakeArrayType());
+                return scoreData2;
+            }
 
             foreach (string response in responseData)
             {
@@ -98,5 +124,6 @@ namespace RegionSearchSS.HarmonyPatches
             object scoreData = JsonConvert.DeserializeObject(scoreContent.ToString(), scoreType.MakeArrayType());
             return scoreData;
         }
+
     }
 }
