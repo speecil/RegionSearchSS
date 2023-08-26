@@ -32,17 +32,14 @@ namespace RegionSearchSS.HarmonyPatches
             return false;
         }
 
-        private static string getListOfCodes(string leaderboardId, string difficulty, int page, string gameMode)
+        private static string GetListOfCodes()
         {
             if (Plugin.RegionCountryDict.TryGetValue(DaConfig.Instance.SelectedRegion.ToLower(), out string countryCodes))
             {
-                return $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries={countryCodes}&page={page}&gameMode={gameMode}";
+                return countryCodes;
             }
-            else
-            {
-                Plugin.Log.Error("FAILED TO RETRIEVE COUNTRY CODES");
-                return $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&page={page}&gameMode={gameMode}";
-            }
+            Plugin.Log.Error("FAILED TO RETRIEVE COUNTRY CODES");
+            return "AU,NZ";
         }
 
         public static async void GetLeaderboardData(object __instance, IDifficultyBeatmap difficultyBeatmap, int page, PlayerSpecificSettings playerSettings, TaskCompletionSource<object> patchResult)
@@ -50,7 +47,7 @@ namespace RegionSearchSS.HarmonyPatches
             string gameMode = $"Solo{difficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName}";
             string difficulty = difficultyBeatmap.difficulty.DefaultRating().ToString();
             string leaderboardId = difficultyBeatmap.level.levelID.Split('_')[2];
-            string[] oceUrl = { $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries={getListOfCodes(leaderboardId, difficulty, page, gameMode)}&page=", $"{page}", $"&gameMode={gameMode}" };
+            string[] oceUrl = { $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries={GetListOfCodes()}&page=", $"{page}", $"&gameMode={gameMode}" };
             string normalUrl = $"/game/leaderboard/around-country/{leaderboardId}/mode/{gameMode}/difficulty/{difficulty}?page={page}";
 
             object http = typeof(ScoreSaber.Plugin).GetProperty("HttpInstance", Flags[0] | Flags[3])?.GetValue(null);
@@ -59,9 +56,7 @@ namespace RegionSearchSS.HarmonyPatches
             {
                 normalData = await (Task<string>)http.GetType().GetMethod("GetAsync", Flags[0] | Flags[2]).Invoke(http, new object[] { normalUrl });
             }
-            catch
-            {
-            }
+            catch { }
 
             Type leaderboardType = typeof(ScoreSaber.Plugin).Assembly.GetType("ScoreSaber.Core.Data.Models.Leaderboard");
             object leaderboardData = JsonConvert.DeserializeObject(normalData, leaderboardType);
@@ -84,16 +79,15 @@ namespace RegionSearchSS.HarmonyPatches
             JArray scoreContent = new JArray();
             List<string> responseData = new List<string>();
 
-            int pageNum = page == 1 ? 1 : (int)(page * 10 / 12f);
-
+            int pageNum = (int)(page * 10 / 12f);
             try
             {
-                if (page * 10 % 12 != 10 || page == 1)
+                if (page * 10 % 12 != 10)
                 {
                     string response = await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2]));
                     responseData.Add(response);
                 }
-                if (page * 10 % 12 != 0 && page != 1)
+                if (page * 10 % 12 != 0)
                 {
                     string response = await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2]));
                     responseData.Add(response);
@@ -123,6 +117,5 @@ namespace RegionSearchSS.HarmonyPatches
             object scoreData = JsonConvert.DeserializeObject(scoreContent.ToString(), scoreType.MakeArrayType());
             return scoreData;
         }
-
     }
 }
