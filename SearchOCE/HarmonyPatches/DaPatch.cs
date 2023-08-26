@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace SearchOCE.HarmonyPatches
+namespace RegionSearchSS.HarmonyPatches
 {
     [HarmonyPatch]
     internal class DaPatch
@@ -25,11 +25,24 @@ namespace SearchOCE.HarmonyPatches
         [HarmonyPrefix]
         public static bool Prefix(object __instance, IDifficultyBeatmap difficultyBeatmap, int page, PlayerSpecificSettings playerSpecificSettings, bool filterAroundCountry, ref object __result)
         {
-            if (!filterAroundCountry) return true;
+            if (!filterAroundCountry || !DaConfig.Instance.Enabled || DaConfig.Instance.SelectedRegion.ToLower() == "none") return true;
             TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
             __result = taskCompletionSource.Task;
             GetLeaderboardData(__instance, difficultyBeatmap, page, playerSpecificSettings, taskCompletionSource);
             return false;
+        }
+
+        private static string getListOfCodes(string leaderboardId, string difficulty, int page, string gameMode)
+        {
+            if (Plugin.RegionCountryDict.TryGetValue(DaConfig.Instance.SelectedRegion.ToLower(), out string countryCodes))
+            {
+                return $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries={countryCodes}&page={page}&gameMode={gameMode}";
+            }
+            else
+            {
+                Plugin.Log.Error("FAILED TO RETRIEVE COUNTRY CODES");
+                return $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&page={page}&gameMode={gameMode}";
+            }
         }
 
         public static async void GetLeaderboardData(object __instance, IDifficultyBeatmap difficultyBeatmap, int page, PlayerSpecificSettings playerSettings, TaskCompletionSource<object> patchResult)
@@ -37,7 +50,7 @@ namespace SearchOCE.HarmonyPatches
             string gameMode = $"Solo{difficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName}";
             string difficulty = difficultyBeatmap.difficulty.DefaultRating().ToString();
             string leaderboardId = difficultyBeatmap.level.levelID.Split('_')[2];
-            string[] oceUrl = { $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries=AU,NZ&page=", $"{page}", $"&gameMode={gameMode}" };
+            string[] oceUrl = { $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries={getListOfCodes(leaderboardId, difficulty, page, gameMode)}&page=", $"{page}", $"&gameMode={gameMode}" };
             string normalUrl = $"/game/leaderboard/around-country/{leaderboardId}/mode/{gameMode}/difficulty/{difficulty}?page={page}";
 
             object http = typeof(ScoreSaber.Plugin).GetProperty("HttpInstance", Flags[0] | Flags[3])?.GetValue(null);

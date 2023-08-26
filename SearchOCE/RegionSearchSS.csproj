@@ -8,8 +8,8 @@
     <ProjectGuid>{8955535A-2401-455F-BB43-4DE40796108E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SearchOCE</RootNamespace>
-    <AssemblyName>SearchOCE</AssemblyName>
+    <RootNamespace>RegionSearchSS</RootNamespace>
+    <AssemblyName>RegionSearchSS</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <DebugSymbols>true</DebugSymbols>
@@ -46,6 +46,11 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="BeatmapCore, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
+    <Reference Include="BSML, Version=1.6.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <Private>False</Private>
+      <HintPath>$(BeatSaberDir)\Plugins\BSML.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="ScoreSaber, Version=3.2.14.0, Culture=neutral, processorArchitecture=MSIL">
       <Private>False</Private>
       <HintPath>$(BeatSaberDir)\Plugins\ScoreSaber.dll</HintPath>
@@ -113,9 +118,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\DaConfig.cs" />
     <Compile Include="HarmonyPatches\DaPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\DaMainMenuUI.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
@@ -123,6 +130,7 @@
   <ItemGroup>
     <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
     <None Include="SearchOCE.csproj.user" Condition="Exists('SearchOCE.csproj.user')" />
+    <EmbeddedResource Include="UI\settings.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

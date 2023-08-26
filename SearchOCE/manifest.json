@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
-  "id": "SearchOCE",
-  "name": "SearchOCE",
+  "id": "RegionSearchSS",
+  "name": "RegionSearchSS",
   "author": "Speecil",
   "version": "0.0.1",
   "description": "",
