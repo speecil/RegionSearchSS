@@ -1,7 +1,7 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
 	<vertical horizontal-fit='PreferredSize' vertical-fit='PreferredSize' child-align='MiddleCenter'>
 		<horizontal bg='round-rect-panel' bg-color='olive' pad='3'>
-			<text text='RegionSearch for ScoreSaber' font-size='8' align='Top' color='white'/>
+			<text text='Region Search for ScoreSaber' font-size='8' align='Top' color='white'/>
 		</horizontal>
 		<vertical pad='3' spacing='4' preferred-width='75' child-control-width='true'>
 			<toggle-setting text='Enabled' value='modEnabled' apply-on-change='true'/>
