@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace SearchOCE.HarmonyPatches
 {
@@ -37,12 +37,12 @@ namespace SearchOCE.HarmonyPatches
             string gameMode = $"Solo{difficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName}";
             string difficulty = difficultyBeatmap.difficulty.DefaultRating().ToString();
             string leaderboardId = difficultyBeatmap.level.levelID.Split('_')[2];
-            string[] oceUrl = {$"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries=AU,NZ&page=", $"{page}", $"&gameMode={gameMode}"};
+            string[] oceUrl = { $"https://scoresaber.com/api/leaderboard/by-hash/{leaderboardId}/scores?difficulty={difficulty}&countries=AU,NZ&page=", $"{page}", $"&gameMode={gameMode}" };
             string normalUrl = $"/game/leaderboard/around-country/{leaderboardId}/mode/{gameMode}/difficulty/{difficulty}?page={page}";
-            
+
             object http = typeof(ScoreSaber.Plugin).GetProperty("HttpInstance", Flags[0] | Flags[3])?.GetValue(null);
             string normalData = await (Task<string>)http.GetType().GetMethod("GetAsync", Flags[0] | Flags[2]).Invoke(http, new object[] { normalUrl });
-            
+
             Type leaderboardType = typeof(ScoreSaber.Plugin).Assembly.GetType("ScoreSaber.Core.Data.Models.Leaderboard");
             object leaderboardData = JsonConvert.DeserializeObject(normalData, leaderboardType);
 
@@ -64,9 +64,9 @@ namespace SearchOCE.HarmonyPatches
             JArray scoreContent = new JArray();
             List<string> responseData = new List<string>();
 
-            int pageNum = page == 1 ? 1 : (int)(page*10 / 12f);
-            if (page*10 % 12 != 10 || page == 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2])));
-            if (page*10 % 12 != 0 && page != 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2])));
+            int pageNum = page == 1 ? 1 : (int)(page * 10 / 12f);
+            if (page * 10 % 12 != 10 || page == 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + pageNum + url[2])));
+            if (page * 10 % 12 != 0 && page != 1) responseData.Add(await client.GetStringAsync(string.Join("", url[0] + (pageNum + 1) + url[2])));
 
             foreach (string response in responseData)
             {
@@ -76,7 +76,7 @@ namespace SearchOCE.HarmonyPatches
                 for (int i = 0; i < scores?.Count; i++)
                 {
                     int rank = scores[i].Value<JObject>()["rank"]?.Value<int>() ?? 0;
-                    if (rank <= page * 10 && rank > (page - 1) * 10) continue; 
+                    if (rank <= page * 10 && rank > (page - 1) * 10) continue;
                     scores.RemoveAt(i); i--;
                 }
                 foreach (var score in scores) scoreContent.Add(score.Value<JObject>());
