@@ -129,7 +129,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
-    <None Include="SearchOCE.csproj.user" Condition="Exists('SearchOCE.csproj.user')" />
     <EmbeddedResource Include="UI\settings.bsml" />
   </ItemGroup>
   <ItemGroup>
